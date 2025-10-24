@@ -1,0 +1,145 @@
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="border-b border-gray-200 pb-5">
+    <h1 class="text-3xl font-bold leading-6 text-gray-900">Dashboard</h1>
+    <p class="mt-2 text-sm text-gray-500">
+      Overview of your portfolios, orders, and market activity
+    </p>
+  </div>
+
+  <!-- Market overview stats -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+      <dt class="truncate text-sm font-medium text-gray-500">Active Orders</dt>
+      <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+        <%= @recent_orders.select { |o| o.status.in?(['pending', 'open', 'partially_filled']) }.count %>
+      </dd>
+    </div>
+
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+      <dt class="truncate text-sm font-medium text-gray-500">Portfolios</dt>
+      <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+        <%= @portfolios.count %>
+      </dd>
+    </div>
+
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+      <dt class="truncate text-sm font-medium text-gray-500">Watchlists</dt>
+      <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+        <%= @watchlists.count %>
+      </dd>
+    </div>
+
+    <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
+      <dt class="truncate text-sm font-medium text-gray-500">Active Alerts</dt>
+      <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+        <%= @alert_events.count %>
+      </dd>
+    </div>
+  </div>
+
+  <!-- Two column layout -->
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <!-- Recent orders -->
+    <div class="overflow-hidden rounded-lg bg-white shadow">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Recent Orders</h3>
+        <div class="flow-root">
+          <ul role="list" class="-my-5 divide-y divide-gray-200">
+            <% if @recent_orders.any? %>
+              <% @recent_orders.first(5).each do |order| %>
+                <li class="py-4">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 truncate">
+                        <%= order.security.ticker %>
+                      </p>
+                      <p class="text-sm text-gray-500">
+                        <%= order.side.titleize %> <%= order.quantity %> @ <%= number_to_currency(order.price, unit: "KES ") %>
+                      </p>
+                    </div>
+                    <div>
+                      <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium <%= order.status == 'filled' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700' %>">
+                        <%= order.status.titleize %>
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              <% end %>
+            <% else %>
+              <li class="py-4 text-sm text-gray-500">No recent orders</li>
+            <% end %>
+          </ul>
+        </div>
+        <%= link_to "View all orders →", orders_path, class: "mt-4 text-sm font-medium text-blue-600 hover:text-blue-500 inline-block" %>
+      </div>
+    </div>
+
+    <!-- Recent news -->
+    <div class="overflow-hidden rounded-lg bg-white shadow">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Latest News</h3>
+        <div class="flow-root">
+          <ul role="list" class="-my-5 divide-y divide-gray-200">
+            <% if @recent_news.any? %>
+              <% @recent_news.each do |news| %>
+                <li class="py-4">
+                  <div class="flex flex-col space-y-2">
+                    <p class="text-sm font-medium text-gray-900">
+                      <%= news.title %>
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      <%= news.source %> • <%= time_ago_in_words(news.published_at) %> ago
+                    </p>
+                  </div>
+                </li>
+              <% end %>
+            <% else %>
+              <li class="py-4 text-sm text-gray-500">No recent news</li>
+            <% end %>
+          </ul>
+        </div>
+        <%= link_to "View all news →", news_items_path, class: "mt-4 text-sm font-medium text-blue-600 hover:text-blue-500 inline-block" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolios overview -->
+  <div class="overflow-hidden rounded-lg bg-white shadow">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Your Portfolios</h3>
+      <% if @portfolios.any? %>
+        <div class="space-y-4">
+          <% @portfolios.each do |portfolio| %>
+            <div class="border border-gray-200 rounded-lg p-4">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-900"><%= portfolio.name %></h4>
+                  <p class="text-sm text-gray-500"><%= portfolio.positions.count %> positions</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= number_to_currency(portfolio.total_value, unit: "KES ") %>
+                  </p>
+                  <p class="text-sm <%= portfolio.unrealized_pnl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= number_to_percentage(portfolio.unrealized_pnl_percentage, precision: 2) %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <%= link_to "View all portfolios →", portfolios_path, class: "mt-4 text-sm font-medium text-blue-600 hover:text-blue-500 inline-block" %>
+      <% else %>
+        <p class="text-sm text-gray-500">No portfolios yet</p>
+        <%= link_to "Create your first portfolio →", new_portfolio_path, class: "mt-4 text-sm font-medium text-blue-600 hover:text-blue-500 inline-block" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="flex gap-4">
+    <%= link_to "New Order", new_order_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" %>
+    <%= link_to "Browse Securities", securities_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50" %>
+  </div>
+</div>
