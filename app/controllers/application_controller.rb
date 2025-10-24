@@ -34,15 +34,18 @@ class ApplicationController < ActionController::Base
   end
 
   def check_2fa_requirement
-    return unless current_user
-    return if devise_controller?
-    return if current_user.otp_secret.blank?
+    # TODO: Implement 2FA verification flow
+    # For now, 2FA is disabled to allow development
+    # Uncomment the code below when implementing 2FA
 
-    # Check if 2FA is verified in session
-    unless session[:otp_verified]
-      # TODO: Implement 2FA verification page
-      # redirect_to verify_2fa_path, alert: "Please verify your 2FA code"
-    end
+    # return unless current_user
+    # return if devise_controller?
+    # return if current_user.two_fa_secret.blank?
+    #
+    # # Check if 2FA is verified in session
+    # unless session[:otp_verified]
+    #   redirect_to verify_2fa_path, alert: "Please verify your 2FA code"
+    # end
   end
 
   def user_not_authorized
