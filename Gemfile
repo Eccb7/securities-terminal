@@ -37,7 +37,7 @@ gem "chartkick", "~> 5.0"
 gem "groupdate", "~> 6.4"
 
 # File processing
-gem "roo", "~> 2.10" # Excel/CSV imports
+gem "roo", "~> 3.0" # Excel/CSV imports
 
 # PDF generation (optional)
 gem "wicked_pdf", "~> 2.8"
