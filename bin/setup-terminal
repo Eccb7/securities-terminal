@@ -1,0 +1,64 @@
+#!/bin/bash
+# Setup script for Kenya Securities Terminal
+
+set -e
+
+echo "🚀 Setting up Kenya Securities Terminal..."
+
+# Check Ruby version
+echo "✓ Checking Ruby version..."
+ruby -v
+
+# Check if bundler is installed
+if ! command -v bundle &> /dev/null; then
+    echo "📦 Installing Bundler..."
+    gem install bundler
+fi
+
+# Install dependencies
+echo "📦 Installing Ruby gems..."
+bundle install
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js is not installed. Please install Node.js 18+ first."
+    exit 1
+fi
+
+# Install Node dependencies
+echo "📦 Installing Node.js packages..."
+npm install
+
+# Setup environment file
+if [ ! -f .env ]; then
+    echo "📝 Creating .env file from template..."
+    cp .env.example .env
+    echo "⚠️  Please edit .env file with your configuration"
+fi
+
+# Create database
+echo "🗄️  Creating database..."
+bundle exec rails db:create
+
+# Run migrations
+echo "🔄 Running migrations..."
+bundle exec rails db:migrate
+
+# Seed database
+echo "🌱 Seeding database..."
+bundle exec rails db:seed
+
+# Setup test database
+echo "🧪 Setting up test database..."
+RAILS_ENV=test bundle exec rails db:create db:migrate
+
+echo "✅ Setup complete!"
+echo ""
+echo "To start the application:"
+echo "  bin/dev"
+echo ""
+echo "To run tests:"
+echo "  bundle exec rspec"
+echo ""
+echo "To access the application:"
+echo "  http://localhost:3000"
