@@ -34,7 +34,7 @@ class AlertRule < ApplicationRecord
   # Instance methods
   def evaluate(data)
     return false unless enabled?
-    
+
     # Expression evaluation logic would go here
     # This is a simplified placeholder
     case rule_type
@@ -64,7 +64,7 @@ class AlertRule < ApplicationRecord
     threshold = expression["threshold"]
     operator = expression["operator"]
     current_price = data[:price]
-    
+
     case operator
     when ">"
       current_price > threshold
@@ -82,14 +82,14 @@ class AlertRule < ApplicationRecord
   def evaluate_price_change(data)
     change_pct = expression["change_percentage"]
     current_change = data[:price_change_percentage]
-    
+
     current_change.abs >= change_pct
   end
 
   def evaluate_volume_threshold(data)
     threshold = expression["threshold"]
     current_volume = data[:volume]
-    
+
     current_volume > threshold
   end
 end
