@@ -1,0 +1,39 @@
+---
+:concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY", 10) %>
+:timeout: 25
+:verbose: false
+:queues:
+  - critical
+  - high
+  - default
+  - low
+  - mailers
+
+:max_retries: 5
+
+:schedule:
+  market_data_ingestion:
+    cron: '*/5 * * * *'  # Every 5 minutes during market hours
+    class: MarketDataIngestionJob
+    queue: high
+    enabled: <%= ENV.fetch("ENABLE_MARKET_SIMULATOR", "true") %>
+
+  portfolio_calculation:
+    cron: '*/1 * * * *'  # Every minute
+    class: PortfolioCalculationJob
+    queue: default
+
+  surveillance_check:
+    cron: '*/2 * * * *'  # Every 2 minutes
+    class: SurveillanceCheckJob
+    queue: high
+
+  news_ingestion:
+    cron: '*/10 * * * *'  # Every 10 minutes
+    class: NewsIngestionJob
+    queue: default
+
+  cleanup_old_quotes:
+    cron: '0 2 * * *'  # Daily at 2 AM
+    class: CleanupOldQuotesJob
+    queue: low
