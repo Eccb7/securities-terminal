@@ -56,13 +56,13 @@ class MarketDataSimulator
       security: security,
       timestamp: @timestamp,
       last_price: new_price,
-      bid_price: bid_price,
-      ask_price: ask_price,
+      bid: bid_price,
+      ask: ask_price,
       volume: volume,
-      open_price: ohlc_data[:open],
-      high_price: ohlc_data[:high],
-      low_price: ohlc_data[:low],
-      close_price: ohlc_data[:close]
+      open: ohlc_data[:open],
+      high: ohlc_data[:high],
+      low: ohlc_data[:low],
+      close: ohlc_data[:close]
     )
   end
 
