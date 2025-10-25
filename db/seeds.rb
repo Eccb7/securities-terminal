@@ -61,7 +61,7 @@ kenyan_securities.each do |sec_data|
     s.isin = sec_data[:isin]
     s.exchange_id = nse.id
     s.lot_size = 100
-    s.status = "active"
+    s.status = :active
   end
 end
 
