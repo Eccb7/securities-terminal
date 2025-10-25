@@ -69,4 +69,17 @@ namespace :market_data do
 
     puts "✅ Order matching completed for #{matched_count} securities!"
   end
+
+  desc "Check all active alert rules"
+  task check_alerts: :environment do
+    puts "🔔 Checking alert rules..."
+
+    alert_count = AlertRule.active.count
+    puts "Found #{alert_count} active alerts to check"
+
+    AlertChecker.check_all_active_alerts
+
+    triggered_count = AlertEvent.where("triggered_at > ?", 1.minute.ago).count
+    puts "✅ Alert checking completed. #{triggered_count} alerts triggered in the last minute."
+  end
 end
