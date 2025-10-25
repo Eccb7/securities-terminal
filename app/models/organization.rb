@@ -2,6 +2,8 @@ class Organization < ApplicationRecord
   # Associations
   has_many :users, dependent: :restrict_with_error
   belongs_to :admin_user, class_name: "User", optional: true
+  has_many :portfolios, dependent: :destroy
+  has_many :alert_rules, dependent: :destroy
 
   # Validations
   validates :name, presence: true, uniqueness: true
