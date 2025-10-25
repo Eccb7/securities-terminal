@@ -9,7 +9,7 @@ class Security < ApplicationRecord
   has_many :watchlists, through: :watchlist_items
 
   # Enums
-  enum instrument_type: {
+  enum :instrument_type, {
     equity: 0,
     bond: 1,
     etf: 2,
@@ -17,7 +17,7 @@ class Security < ApplicationRecord
     derivative: 4
   }
 
-  enum status: {
+  enum :status, {
     active: 0,
     suspended: 1,
     delisted: 2,
