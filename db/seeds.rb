@@ -94,6 +94,87 @@ end
   end
 end
 
+# Create sample news items
+puts "Creating sample news items..."
+news_data = [
+  {
+    security: Security.find_by(ticker: "EQTY"),
+    title: "Equity Group Reports Strong Q3 2025 Earnings",
+    summary: "Equity Group Holdings posts 23% increase in profit before tax to KES 28.5 billion for the nine months ended September 2025.",
+    content: "Equity Group Holdings PLC has announced impressive financial results for the third quarter of 2025, with profit before tax rising 23% to KES 28.5 billion compared to KES 23.2 billion in the same period last year.\n\nThe Group's total assets grew by 18% to KES 1.4 trillion, while customer deposits increased by 15% to KES 1.1 trillion. The strong performance was driven by growth in both traditional banking and digital financial services.\n\nEquity Bank CEO James Mwangi attributed the results to the bank's focus on digital innovation and financial inclusion. The bank's mobile banking platform now serves over 16 million customers across the region.",
+    category: "earnings",
+    source: "NSE Market Updates",
+    published_at: 2.days.ago
+  },
+  {
+    security: Security.find_by(ticker: "KCB"),
+    title: "KCB Group Declares Interim Dividend of KES 1.50 Per Share",
+    summary: "KCB Group PLC Board declares interim dividend following strong half-year performance.",
+    content: "The Board of Directors of KCB Group PLC has declared an interim dividend of KES 1.50 per ordinary share for the financial year ending December 31, 2025.\n\nThe dividend will be paid on November 30, 2025, to shareholders on the register as at the close of business on November 15, 2025. The shares will trade ex-dividend from November 13, 2025.\n\nThis dividend follows the Group's strong half-year results, which saw profit after tax increase by 18% to KES 22.3 billion.",
+    category: "dividend",
+    source: "KCB Group Press Release",
+    published_at: 5.days.ago
+  },
+  {
+    security: Security.find_by(ticker: "SCOM"),
+    title: "Safaricom Launches 5G Services in Nairobi and Mombasa",
+    summary: "Safaricom rolls out 5G network in major cities, promising faster internet speeds and enhanced connectivity.",
+    content: "Safaricom PLC has officially launched its 5G network services in Nairobi and Mombasa, marking a significant milestone in Kenya's digital transformation journey.\n\nThe 5G network promises download speeds of up to 700 Mbps, significantly faster than the current 4G network. The rollout targets key business districts, residential areas, and major institutions.\n\nSafaricom CEO Peter Ndegwa stated that the 5G network will support emerging technologies such as IoT, smart cities, and autonomous vehicles. The company plans to expand 5G coverage to other major towns by mid-2026.",
+    category: "corporate_action",
+    source: "Safaricom PLC",
+    published_at: 1.week.ago
+  },
+  {
+    security: Security.find_by(ticker: "EABL"),
+    title: "EABL Invests KES 5 Billion in New Brewery Expansion",
+    summary: "East African Breweries announces major investment in production capacity expansion.",
+    content: "East African Breweries Limited (EABL) has announced a KES 5 billion investment in expanding its brewing capacity across the region.\n\nThe investment will see the construction of a new state-of-the-art brewery in Kisumu and upgrades to existing facilities in Nairobi and Mombasa. The project is expected to create 2,000 direct jobs and thousands more in the supply chain.\n\nEABL Managing Director Jane Karuku said the expansion reflects the company's confidence in the region's economic growth and increasing consumer demand for premium beverages.",
+    category: "corporate_action",
+    source: "Business Daily",
+    published_at: 10.days.ago
+  },
+  {
+    security: Security.find_by(ticker: "NCBA"),
+    title: "NCBA Bank Partners with Fintech Firms for Digital Lending",
+    summary: "NCBA Bank announces strategic partnerships to enhance digital financial services.",
+    content: "NCBA Bank has announced partnerships with leading fintech companies to expand its digital lending capabilities and improve customer experience.\n\nThe partnerships will enable the bank to leverage AI and machine learning for faster loan processing and better risk assessment. Customers will be able to access loans through mobile apps with approval times reduced from days to minutes.\n\nNCBA CEO John Gachora emphasized the bank's commitment to digital innovation and financial inclusion, particularly for SMEs and individual customers.",
+    category: "corporate_action",
+    source: "The Standard",
+    published_at: 3.days.ago
+  },
+  {
+    security: nil,
+    title: "NSE Introduces New Trading Hours Starting January 2026",
+    summary: "Nairobi Securities Exchange announces extended trading hours to improve market liquidity.",
+    content: "The Nairobi Securities Exchange (NSE) has announced that it will extend its trading hours starting January 2, 2026. The new trading session will run from 8:00 AM to 4:00 PM EAT, an extension of one hour on each end.\n\nThe change is aimed at improving market liquidity and providing more flexibility for investors. The NSE believes the extended hours will attract more retail investors and align better with international market hours.\n\nThe Capital Markets Authority has approved the change, which will apply to all securities listed on the exchange.",
+    category: "market_update",
+    source: "NSE Press Release",
+    published_at: 1.day.ago
+  },
+  {
+    security: nil,
+    title: "CMA Issues New Guidelines on ESG Reporting",
+    summary: "Capital Markets Authority mandates ESG disclosures for all listed companies.",
+    content: "The Capital Markets Authority (CMA) has issued new guidelines requiring all listed companies to include Environmental, Social, and Governance (ESG) disclosures in their annual reports starting from the 2026 financial year.\n\nThe guidelines aim to enhance transparency and encourage sustainable business practices among listed firms. Companies will be required to report on their carbon emissions, diversity policies, board composition, and community impact.\n\nCMA CEO Wycliffe Shamiah stated that the move aligns Kenya's capital markets with global best practices and will help attract ESG-focused investors.",
+    category: "regulatory",
+    source: "Capital Markets Authority",
+    published_at: 4.days.ago
+  }
+]
+
+news_data.each do |news|
+  NewsItem.find_or_create_by!(title: news[:title]) do |item|
+    item.security = news[:security]
+    item.summary = news[:summary]
+    item.content = news[:content]
+    item.category = news[:category]
+    item.source = news[:source]
+    item.published_at = news[:published_at]
+  end
+end
+
+puts "Created #{NewsItem.count} news items"
+
 puts "\n✅ Seeding complete!"
 puts "  Admin: admin@kenyaterminal.com / password123"
 puts "  Trader: trader@kenyaterminal.com / password123"
