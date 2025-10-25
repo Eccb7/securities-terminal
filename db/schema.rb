@@ -10,20 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_25_214630) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_25_220040) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "alert_events", force: :cascade do |t|
     t.bigint "alert_rule_id", null: false
-    t.string "severity"
-    t.jsonb "payload"
-    t.boolean "resolved"
     t.datetime "resolved_at"
     t.text "message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "triggered_at", null: false
+    t.decimal "actual_value", precision: 15, scale: 2
+    t.string "status", default: "pending"
+    t.index ["alert_rule_id", "triggered_at"], name: "index_alert_events_on_alert_rule_id_and_triggered_at"
     t.index ["alert_rule_id"], name: "index_alert_events_on_alert_rule_id"
+    t.index ["status"], name: "index_alert_events_on_status"
   end
 
   create_table "alert_rules", force: :cascade do |t|
