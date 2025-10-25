@@ -175,6 +175,73 @@ end
 
 puts "Created #{NewsItem.count} news items"
 
+# Create sample alert rules
+puts "Creating sample alert rules..."
+alert_rules_data = [
+  {
+    user: trader_user,
+    security: Security.find_by(ticker: "EQTY"),
+    condition_type: "price",
+    comparison_operator: "greater_than",
+    threshold_value: 50.00,
+    notification_method: "both",
+    status: "active"
+  },
+  {
+    user: trader_user,
+    security: Security.find_by(ticker: "KCB"),
+    condition_type: "price",
+    comparison_operator: "less_than",
+    threshold_value: 35.00,
+    notification_method: "email",
+    status: "active"
+  },
+  {
+    user: trader_user,
+    security: Security.find_by(ticker: "SCOM"),
+    condition_type: "percent_change",
+    comparison_operator: "greater_than",
+    threshold_value: 5.0,
+    notification_method: "in_app",
+    status: "active"
+  },
+  {
+    user: admin_user,
+    security: Security.find_by(ticker: "EABL"),
+    condition_type: "price",
+    comparison_operator: "greater_than",
+    threshold_value: 170.00,
+    notification_method: "both",
+    status: "active"
+  },
+  {
+    user: admin_user,
+    security: Security.find_by(ticker: "NCBA"),
+    condition_type: "volume",
+    comparison_operator: "greater_than",
+    threshold_value: 50000,
+    notification_method: "email",
+    status: "inactive"
+  }
+]
+
+alert_rules_data.each do |alert_data|
+  next unless alert_data[:security] # Skip if security not found
+
+  AlertRule.find_or_create_by!(
+    user_id: alert_data[:user].id,
+    security_id: alert_data[:security].id,
+    condition_type: alert_data[:condition_type]
+  ) do |alert|
+    alert.comparison_operator = alert_data[:comparison_operator]
+    alert.threshold_value = alert_data[:threshold_value]
+    alert.notification_method = alert_data[:notification_method]
+    alert.status = alert_data[:status]
+  end
+end
+
+puts "Created #{AlertRule.count} alert rules"
+
 puts "\n✅ Seeding complete!"
 puts "  Admin: admin@terminal.com / password123"
 puts "  Trader: trader@terminal.com / password123"
@@ -183,4 +250,7 @@ puts "  Admin Portfolio: KES #{admin_portfolio.cash_balance}"
 puts "  Trader Portfolio: KES #{trader_portfolio.cash_balance}"
 puts "\n👁️  Demo watchlist created:"
 puts "  #{trader_watchlist.name}: #{trader_watchlist.watchlist_items.count} securities"
+puts "\n🔔 Demo alerts created:"
+puts "  Total alert rules: #{AlertRule.count} (#{AlertRule.active.count} active)"
 puts "\n💡 Run 'rake market_data:simulate_continuous' to start real-time simulation"
+puts "💡 Run 'rake market_data:check_alerts' to manually check all alerts"
