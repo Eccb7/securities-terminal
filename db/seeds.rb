@@ -26,14 +26,14 @@ end
 
 # Create Users
 puts "Creating users..."
-admin_user = User.find_or_create_by!(email: "admin@kenyaterminal.com") do |u|
+admin_user = User.find_or_create_by!(email: "admin@terminal.com") do |u|
   u.name = "System Administrator"
   u.password = "password123"
   u.role = :super_admin
   u.organization = demo_org
 end
 
-trader_user = User.find_or_create_by!(email: "trader@kenyaterminal.com") do |u|
+trader_user = User.find_or_create_by!(email: "trader@terminal.com") do |u|
   u.name = "Demo Trader"
   u.password = "password123"
   u.role = :trader
@@ -176,8 +176,8 @@ end
 puts "Created #{NewsItem.count} news items"
 
 puts "\n✅ Seeding complete!"
-puts "  Admin: admin@kenyaterminal.com / password123"
-puts "  Trader: trader@kenyaterminal.com / password123"
+puts "  Admin: admin@terminal.com / password123"
+puts "  Trader: trader@terminal.com / password123"
 puts "\n📊 Demo portfolios created:"
 puts "  Admin Portfolio: KES #{admin_portfolio.cash_balance}"
 puts "  Trader Portfolio: KES #{trader_portfolio.cash_balance}"
