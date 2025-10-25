@@ -3,7 +3,7 @@ class AlertEvent < ApplicationRecord
   belongs_to :alert_rule
 
   # Enums
-  enum severity: {
+  enum :severity, {
     info: 0,
     warning: 1,
     critical: 2
