@@ -1,0 +1,145 @@
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold leading-6 text-gray-900">Portfolios</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Manage your investment portfolios and track performance
+        </p>
+      </div>
+      
+      <%= link_to "New Portfolio", new_portfolio_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+    </div>
+  </div>
+
+  <!-- Portfolio cards grid -->
+  <% if @portfolios.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @portfolios.each do |portfolio| %>
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+          <!-- Portfolio header -->
+          <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <h3 class="text-lg font-semibold text-gray-900"><%= portfolio.name %></h3>
+            <p class="text-sm text-gray-500 mt-1">
+              <%= pluralize(portfolio.positions.count, 'position') %>
+            </p>
+          </div>
+
+          <!-- Portfolio metrics -->
+          <div class="px-6 py-4 space-y-4">
+            <!-- Total Value -->
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Total Value</dt>
+              <dd class="mt-1 text-2xl font-bold text-gray-900">
+                <%= number_to_currency(portfolio.total_value, unit: "KES ") %>
+              </dd>
+            </div>
+
+            <!-- Cash Balance -->
+            <div class="flex justify-between items-center">
+              <dt class="text-sm font-medium text-gray-500">Cash Balance</dt>
+              <dd class="text-sm font-semibold text-gray-900">
+                <%= number_to_currency(portfolio.cash_balance, unit: "KES ") %>
+              </dd>
+            </div>
+
+            <!-- Unrealized P&L -->
+            <% unrealized_pl = portfolio.unrealized_pnl %>
+            <div class="flex justify-between items-center">
+              <dt class="text-sm font-medium text-gray-500">Unrealized P&L</dt>
+              <dd class="text-sm font-semibold <%= unrealized_pl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                <%= unrealized_pl >= 0 ? '+' : '' %><%= number_to_currency(unrealized_pl, unit: "KES ") %>
+                <% if portfolio.total_cost > 0 %>
+                  <span class="text-xs">(<%= number_to_percentage(portfolio.unrealized_pnl_percentage, precision: 2) %>)</span>
+                <% end %>
+              </dd>
+            </div>
+
+            <!-- Realized P&L -->
+            <% if portfolio.realized_pl != 0 %>
+              <div class="flex justify-between items-center">
+                <dt class="text-sm font-medium text-gray-500">Realized P&L</dt>
+                <dd class="text-sm font-semibold <%= portfolio.realized_pl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                  <%= portfolio.realized_pl >= 0 ? '+' : '' %><%= number_to_currency(portfolio.realized_pl, unit: "KES ") %>
+                </dd>
+              </div>
+            <% end %>
+
+            <!-- Performance indicator -->
+            <% if portfolio.total_cost > 0 %>
+              <div class="pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-500">Performance</span>
+                  <% pl_percent = portfolio.unrealized_pnl_percentage %>
+                  <span class="font-semibold <%= pl_percent >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= pl_percent >= 0 ? '▲' : '▼' %> <%= number_to_percentage(pl_percent.abs, precision: 2) %>
+                  </span>
+                </div>
+                <div class="mt-2 w-full bg-gray-200 rounded-full h-2">
+                  <% progress = [[(pl_percent + 50), 0].max, 100].min %>
+                  <div class="<%= pl_percent >= 0 ? 'bg-green-500' : 'bg-red-500' %> h-2 rounded-full transition-all" style="width: <%= progress %>%"></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Actions -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-2">
+            <%= link_to "View Details", portfolio_path(portfolio), class: "flex-1 text-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+            <%= link_to "Edit", edit_portfolio_path(portfolio), class: "rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Summary statistics -->
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Portfolio Summary</h3>
+      
+      <dl class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Total Portfolio Value</dt>
+          <dd class="mt-1 text-2xl font-bold text-gray-900">
+            <%= number_to_currency(@portfolios.sum(&:total_value), unit: "KES ") %>
+          </dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Total Cash</dt>
+          <dd class="mt-1 text-2xl font-bold text-gray-900">
+            <%= number_to_currency(@portfolios.sum(&:cash_balance), unit: "KES ") %>
+          </dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Total Unrealized P&L</dt>
+          <% total_unrealized = @portfolios.sum(&:unrealized_pnl) %>
+          <dd class="mt-1 text-2xl font-bold <%= total_unrealized >= 0 ? 'text-green-600' : 'text-red-600' %>">
+            <%= total_unrealized >= 0 ? '+' : '' %><%= number_to_currency(total_unrealized, unit: "KES ") %>
+          </dd>
+        </div>
+        
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Total Positions</dt>
+          <dd class="mt-1 text-2xl font-bold text-gray-900">
+            <%= @portfolios.sum { |p| p.positions.count } %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+  <% else %>
+    <!-- Empty state -->
+    <div class="text-center py-12 bg-white rounded-lg shadow">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-semibold text-gray-900">No portfolios</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by creating your first portfolio.</p>
+      <div class="mt-6">
+        <%= link_to "Create Portfolio", new_portfolio_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+      </div>
+    </div>
+  <% end %>
+</div>
