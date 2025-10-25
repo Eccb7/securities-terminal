@@ -80,10 +80,26 @@ puts "Generating initial market data..."
 MarketDataSimulator.generate_quotes_for_all_securities
 puts "Market data generated for #{Security.active.count} securities"
 
+# Create demo watchlists
+puts "Creating demo watchlists..."
+trader_watchlist = Watchlist.find_or_create_by!(name: "Blue Chips", user: trader_user) do |w|
+  # Watchlist will be created
+end
+
+# Add securities to watchlist
+[ "EQTY", "KCB", "SCOM" ].each do |ticker|
+  security = Security.find_by(ticker: ticker)
+  if security && !trader_watchlist.watchlist_items.exists?(security: security)
+    trader_watchlist.watchlist_items.create!(security: security)
+  end
+end
+
 puts "\n✅ Seeding complete!"
 puts "  Admin: admin@kenyaterminal.com / password123"
 puts "  Trader: trader@kenyaterminal.com / password123"
 puts "\n📊 Demo portfolios created:"
 puts "  Admin Portfolio: KES #{admin_portfolio.cash_balance}"
 puts "  Trader Portfolio: KES #{trader_portfolio.cash_balance}"
+puts "\n👁️  Demo watchlist created:"
+puts "  #{trader_watchlist.name}: #{trader_watchlist.watchlist_items.count} securities"
 puts "\n💡 Run 'rake market_data:simulate_continuous' to start real-time simulation"
