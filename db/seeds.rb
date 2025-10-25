@@ -65,6 +65,25 @@ kenyan_securities.each do |sec_data|
   end
 end
 
+# Create Portfolios
+puts "Creating portfolios..."
+admin_portfolio = Portfolio.find_or_create_by!(name: "Admin Portfolio", user: admin_user, organization: demo_org) do |p|
+  p.cash_balance = 1_000_000 # KES 1M starting cash
+end
+
+trader_portfolio = Portfolio.find_or_create_by!(name: "Trader Portfolio", user: trader_user, organization: demo_org) do |p|
+  p.cash_balance = 500_000 # KES 500K starting cash
+end
+
+# Generate initial market data
+puts "Generating initial market data..."
+MarketDataSimulator.generate_quotes_for_all_securities
+puts "Market data generated for #{Security.active.count} securities"
+
 puts "\n✅ Seeding complete!"
 puts "  Admin: admin@kenyaterminal.com / password123"
 puts "  Trader: trader@kenyaterminal.com / password123"
+puts "\n📊 Demo portfolios created:"
+puts "  Admin Portfolio: KES #{admin_portfolio.cash_balance}"
+puts "  Trader Portfolio: KES #{trader_portfolio.cash_balance}"
+puts "\n💡 Run 'rake market_data:simulate_continuous' to start real-time simulation"
