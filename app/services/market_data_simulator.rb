@@ -52,7 +52,7 @@ class MarketDataSimulator
     ohlc_data = generate_ohlc_data(new_price, last_quote)
 
     # Create the market quote
-    MarketQuote.create!(
+    quote = MarketQuote.create!(
       security: security,
       timestamp: @timestamp,
       last_price: new_price,
@@ -64,6 +64,11 @@ class MarketDataSimulator
       low: ohlc_data[:low],
       close: ohlc_data[:close]
     )
+
+    # Check alerts for this security after price update
+    AlertCheckerJob.perform_later(security.id) if defined?(AlertCheckerJob)
+
+    quote
   end
 
   private
