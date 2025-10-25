@@ -1,0 +1,139 @@
+<div class="space-y-6" data-controller="market-data" data-market-data-security-id-value="<%= @security.id %>">
+  <!-- Header with security info -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-bold text-gray-900"><%= @security.ticker %></h1>
+          <span class="inline-flex items-center rounded-md bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+            <%= @security.instrument_type.titleize %>
+          </span>
+          <span class="inline-flex items-center rounded-md <%= @security.active? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %> px-3 py-1 text-sm font-medium">
+            <%= @security.status.titleize %>
+          </span>
+        </div>
+        <p class="mt-2 text-lg text-gray-600"><%= @security.name %></p>
+        <p class="mt-1 text-sm text-gray-500">
+          <%= @security.exchange.display_name %> • ISIN: <%= @security.isin || "N/A" %> • Lot Size: <%= @security.lot_size %>
+        </p>
+      </div>
+      
+      <% if current_user.can_trade? && @security.tradable? %>
+        <div class="flex gap-2">
+          <%= link_to "Buy", new_order_path(security_id: @security.id, side: "buy"), class: "inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500" %>
+          <%= link_to "Sell", new_order_path(security_id: @security.id, side: "sell"), class: "inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Quote panel -->
+  <% if @latest_quote %>
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+        <dt class="truncate text-sm font-medium text-gray-500">Last Price</dt>
+        <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900" data-market-data-target="price">
+          <%= number_to_currency(@latest_quote.last_price, unit: "KES ") %>
+        </dd>
+      </div>
+
+      <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+        <dt class="truncate text-sm font-medium text-gray-500">Change</dt>
+        <dd class="mt-1 text-3xl font-semibold tracking-tight <%= @latest_quote.price_change && @latest_quote.price_change >= 0 ? 'text-green-600' : 'text-red-600' %>" data-market-data-target="change">
+          <% if @latest_quote.price_change %>
+            <%= @latest_quote.price_change >= 0 ? '+' : '' %><%= number_with_precision(@latest_quote.price_change, precision: 2) %>
+            (<%= number_to_percentage(@latest_quote.price_change_percentage, precision: 2) %>)
+          <% else %>
+            —
+          <% end %>
+        </dd>
+      </div>
+
+      <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+        <dt class="truncate text-sm font-medium text-gray-500">Bid / Ask</dt>
+        <dd class="mt-1 text-xl font-semibold tracking-tight text-gray-900">
+          <%= number_to_currency(@latest_quote.bid_price, unit: "KES ") %> / 
+          <%= number_to_currency(@latest_quote.ask_price, unit: "KES ") %>
+        </dd>
+        <p class="text-xs text-gray-500 mt-1">
+          Spread: <%= number_to_currency(@latest_quote.spread, unit: "KES ") %>
+          (<%= number_to_percentage(@latest_quote.spread_percentage, precision: 2) %>)
+        </p>
+      </div>
+
+      <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow">
+        <dt class="truncate text-sm font-medium text-gray-500">Volume</dt>
+        <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900" data-market-data-target="volume">
+          <%= number_with_delimiter(@latest_quote.volume) %>
+        </dd>
+      </div>
+    </div>
+
+    <!-- OHLC panel -->
+    <div class="overflow-hidden rounded-lg bg-white shadow">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Day's Range</h3>
+        <dl class="grid grid-cols-1 gap-5 sm:grid-cols-4">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Open</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900">
+              <%= number_to_currency(@latest_quote.open_price, unit: "KES ") %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">High</dt>
+            <dd class="mt-1 text-2xl font-semibold text-green-600">
+              <%= number_to_currency(@latest_quote.high_price, unit: "KES ") %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Low</dt>
+            <dd class="mt-1 text-2xl font-semibold text-red-600">
+              <%= number_to_currency(@latest_quote.low_price, unit: "KES ") %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Previous Close</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900">
+              <%= number_to_currency(@latest_quote.close_price, unit: "KES ") %>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  <% else %>
+    <div class="rounded-lg bg-yellow-50 p-4">
+      <p class="text-sm text-yellow-800">No market data available for this security yet.</p>
+    </div>
+  <% end %>
+
+  <!-- Recent news -->
+  <% if @recent_news.any? %>
+    <div class="overflow-hidden rounded-lg bg-white shadow">
+      <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Recent News</h3>
+        <div class="space-y-4">
+          <% @recent_news.each do |news| %>
+            <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+              <h4 class="text-sm font-medium text-gray-900"><%= news.title %></h4>
+              <p class="mt-1 text-sm text-gray-600"><%= news.snippet(150) %></p>
+              <p class="mt-1 text-xs text-gray-500">
+                <%= news.source %> • <%= time_ago_in_words(news.published_at) %> ago
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Chart placeholder -->
+  <div class="overflow-hidden rounded-lg bg-white shadow">
+    <div class="px-4 py-5 sm:p-6">
+      <h3 class="text-base font-semibold leading-6 text-gray-900 mb-4">Price Chart</h3>
+      <div class="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+        <p class="text-gray-500">Chart coming soon...</p>
+      </div>
+    </div>
+  </div>
+</div>
