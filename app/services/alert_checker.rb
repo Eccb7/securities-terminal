@@ -16,7 +16,7 @@ class AlertChecker
   end
 
   def self.check_alert(alert_rule)
-    return unless alert_rule.active?
+    return unless alert_rule.status == "active"
 
     latest_quote = alert_rule.security.latest_quote
     return unless latest_quote
