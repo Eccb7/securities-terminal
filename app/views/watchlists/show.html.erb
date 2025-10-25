@@ -1,0 +1,212 @@
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <nav class="flex" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <%= link_to "Watchlists", watchlists_path, class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li class="text-gray-900 font-medium">
+        <%= @watchlist.name %>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Header with actions -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900"><%= @watchlist.name %></h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Monitoring <%= pluralize(@watchlist_items.count, 'security') %>
+        </p>
+      </div>
+      
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_watchlist_path(@watchlist), class: "inline-flex items-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500" %>
+        <%= button_to "Delete", watchlist_path(@watchlist), method: :delete, class: "inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500", form: { data: { turbo_confirm: "Are you sure you want to delete this watchlist?" } } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Main content - Securities list -->
+    <div class="lg:col-span-3">
+      <!-- Add security form -->
+      <% if @available_securities.any? %>
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Security</h3>
+          <%= form_with url: add_security_watchlist_path(@watchlist), method: :post, class: "flex gap-2" do |f| %>
+            <%= select_tag :security_id,
+                          options_from_collection_for_select(@available_securities, :id, :display_name),
+                          class: "flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                          prompt: "Select a security to add..." %>
+            <%= f.submit "Add to Watchlist", class: "rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Securities table -->
+      <div class="bg-white shadow rounded-lg overflow-hidden" data-controller="market-data">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Securities</h2>
+        </div>
+        
+        <% if @watchlist_items.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Security</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Last Price</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Change</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Bid</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Ask</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Volume</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <% @watchlist_items.each do |item| %>
+                  <% security = item.security %>
+                  <% latest_quote = security.latest_quote %>
+                  
+                  <tr class="hover:bg-gray-50" data-market-data-ticker-value="<%= security.ticker %>">
+                    <td class="whitespace-nowrap px-6 py-4">
+                      <%= link_to security_path(security), class: "block" do %>
+                        <div class="text-sm font-medium text-blue-600 hover:text-blue-900"><%= security.ticker %></div>
+                        <div class="text-xs text-gray-500"><%= security.name %></div>
+                      <% end %>
+                    </td>
+                    
+                    <% if latest_quote %>
+                      <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <div class="text-sm font-semibold text-gray-900" data-market-data-target="lastPrice">
+                          <%= number_to_currency(latest_quote.last_price, unit: "KES ", precision: 2) %>
+                        </div>
+                      </td>
+                      
+                      <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <% change = latest_quote.price_change || 0 %>
+                        <% change_percent = latest_quote.price_change_percentage || 0 %>
+                        <div class="text-sm font-semibold <%= change >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                          <%= change >= 0 ? '+' : '' %><%= number_to_currency(change, unit: "KES ", precision: 2) %>
+                        </div>
+                        <div class="text-xs <%= change_percent >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                          <%= change_percent >= 0 ? '▲' : '▼' %> <%= number_to_percentage(change_percent.abs, precision: 2) %>
+                        </div>
+                      </td>
+                      
+                      <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <div class="text-sm text-green-600 font-medium" data-market-data-target="bid">
+                          <%= number_to_currency(latest_quote.bid, unit: "KES ", precision: 2) %>
+                        </div>
+                      </td>
+                      
+                      <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <div class="text-sm text-red-600 font-medium" data-market-data-target="ask">
+                          <%= number_to_currency(latest_quote.ask, unit: "KES ", precision: 2) %>
+                        </div>
+                      </td>
+                      
+                      <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <div class="text-sm text-gray-900" data-market-data-target="volume">
+                          <%= number_with_delimiter(latest_quote.volume) %>
+                        </div>
+                      </td>
+                    <% else %>
+                      <td colspan="5" class="whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500">
+                        No market data available
+                      </td>
+                    <% end %>
+                    
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                      <div class="flex justify-end gap-2">
+                        <% if current_user.can_trade? %>
+                          <%= link_to "Trade", new_order_path(security_id: security.id), class: "text-blue-600 hover:text-blue-900" %>
+                        <% end %>
+                        <%= button_to "Remove", watchlist_remove_security_path(@watchlist, item_id: item.id), 
+                                     method: :delete, 
+                                     class: "text-red-600 hover:text-red-900",
+                                     form: { data: { turbo_confirm: "Remove #{security.ticker} from watchlist?" } } %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">No securities</h3>
+            <p class="mt-1 text-sm text-gray-500">Start by adding securities to track.</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Quick stats -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Statistics</h2>
+        </div>
+        
+        <div class="px-6 py-4">
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Total Securities</dt>
+              <dd class="mt-1 text-2xl font-bold text-gray-900">
+                <%= @watchlist_items.count %>
+              </dd>
+            </div>
+            
+            <% if @watchlist_items.any? %>
+              <% quotes_with_data = @watchlist_items.map { |i| i.security.latest_quote }.compact %>
+              <% if quotes_with_data.any? %>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Gainers</dt>
+                  <dd class="mt-1 text-lg font-semibold text-green-600">
+                    <%= quotes_with_data.count { |q| (q.price_change || 0) > 0 } %>
+                  </dd>
+                </div>
+                
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Losers</dt>
+                  <dd class="mt-1 text-lg font-semibold text-red-600">
+                    <%= quotes_with_data.count { |q| (q.price_change || 0) < 0 } %>
+                  </dd>
+                </div>
+              <% end %>
+            <% end %>
+            
+            <div class="pt-4 border-t border-gray-200">
+              <dt class="text-sm font-medium text-gray-500">Created</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= @watchlist.created_at.strftime("%b %d, %Y") %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+        </div>
+        
+        <div class="px-6 py-4 space-y-2">
+          <%= link_to "Browse Securities", securities_path, class: "block w-full text-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+          <%= link_to "Back to Watchlists", watchlists_path, class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
