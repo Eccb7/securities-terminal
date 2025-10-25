@@ -66,6 +66,10 @@ class PortfoliosController < ApplicationController
   end
 
   def portfolio_params
-    params.require(:portfolio).permit(:name)
+    params.require(:portfolio).permit(:name, :cash_balance)
+  end
+
+  def current_organization
+    current_user.organization
   end
 end
