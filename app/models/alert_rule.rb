@@ -1,95 +1,54 @@
 class AlertRule < ApplicationRecord
   # Associations
-  belongs_to :organization
+  belongs_to :user
+  belongs_to :security
   has_many :alert_events, dependent: :destroy
 
-  # Enums
-  enum :rule_type, {
-    price_threshold: 0,
-    price_change: 1,
-    volume_threshold: 2,
-    volatility: 3,
-    custom: 4
-  }
-
-  enum :severity, {
-    info: 0,
-    warning: 1,
-    critical: 2
-  }
-
   # Validations
-  validates :organization, presence: true
-  validates :name, presence: true
-  validates :rule_type, presence: true
-  validates :severity, presence: true
-  validates :expression, presence: true
+  validates :user, presence: true
+  validates :security, presence: true
+  validates :condition_type, presence: true, inclusion: { in: %w[price volume percent_change] }
+  validates :comparison_operator, presence: true, inclusion: { in: %w[greater_than less_than equals] }
+  validates :threshold_value, presence: true, numericality: true
+  validates :notification_method, presence: true, inclusion: { in: %w[email in_app both] }
+  validates :status, presence: true, inclusion: { in: %w[active inactive triggered] }
 
   # Scopes
-  scope :enabled, -> { where(enabled: true) }
-  scope :for_organization, ->(org_id) { where(organization_id: org_id) }
-  scope :by_severity, ->(severity) { where(severity: severity) }
-  scope :by_type, ->(type) { where(rule_type: type) }
+  scope :active, -> { where(status: "active") }
+  scope :inactive, -> { where(status: "inactive") }
+  scope :triggered, -> { where(status: "triggered") }
+  scope :for_user, ->(user_id) { where(user_id: user_id) }
+  scope :for_security, ->(security_id) { where(security_id: security_id) }
 
   # Instance methods
-  def evaluate(data)
-    return false unless enabled?
-
-    # Expression evaluation logic would go here
-    # This is a simplified placeholder
-    case rule_type
-    when "price_threshold"
-      evaluate_price_threshold(data)
-    when "price_change"
-      evaluate_price_change(data)
-    when "volume_threshold"
-      evaluate_volume_threshold(data)
+  def condition_met?(actual_value)
+    case comparison_operator
+    when "greater_than"
+      actual_value > threshold_value
+    when "less_than"
+      actual_value < threshold_value
+    when "equals"
+      (actual_value - threshold_value).abs < 0.01
     else
       false
     end
   end
 
-  def trigger_alert!(message, payload = {})
-    alert_events.create!(
-      severity: severity,
-      message: message,
-      payload: payload,
-      triggered_at: Time.current
-    )
+  def trigger!(actual_value, message: nil)
+    transaction do
+      update!(status: "triggered")
+      alert_events.create!(
+        triggered_at: Time.current,
+        actual_value: actual_value,
+        status: "pending",
+        message: message || build_alert_message(actual_value)
+      )
+    end
   end
 
   private
 
-  def evaluate_price_threshold(data)
-    threshold = expression["threshold"]
-    operator = expression["operator"]
-    current_price = data[:price]
-
-    case operator
-    when ">"
-      current_price > threshold
-    when "<"
-      current_price < threshold
-    when ">="
-      current_price >= threshold
-    when "<="
-      current_price <= threshold
-    else
-      false
-    end
-  end
-
-  def evaluate_price_change(data)
-    change_pct = expression["change_percentage"]
-    current_change = data[:price_change_percentage]
-
-    current_change.abs >= change_pct
-  end
-
-  def evaluate_volume_threshold(data)
-    threshold = expression["threshold"]
-    current_volume = data[:volume]
-
-    current_volume > threshold
+  def build_alert_message(actual_value)
+    "#{security.ticker} #{condition_type} #{comparison_operator.gsub('_', ' ')} #{threshold_value} (actual: #{actual_value})"
   end
 end
