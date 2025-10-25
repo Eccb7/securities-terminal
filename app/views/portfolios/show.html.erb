@@ -1,0 +1,258 @@
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <nav class="flex" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <%= link_to "Portfolios", portfolios_path, class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li class="text-gray-900 font-medium">
+        <%= @portfolio.name %>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Header with actions -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900"><%= @portfolio.name %></h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Portfolio performance and holdings overview
+        </p>
+      </div>
+      
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_portfolio_path(@portfolio), class: "inline-flex items-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500" %>
+        <%= button_to "Delete", portfolio_path(@portfolio), method: :delete, class: "inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500", form: { data: { turbo_confirm: "Are you sure you want to delete this portfolio?" } } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key metrics cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- Total Value -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <dt class="text-sm font-medium text-gray-500">Total Value</dt>
+      <dd class="mt-2 text-3xl font-bold text-gray-900">
+        <%= number_to_currency(@portfolio.total_value, unit: "KES ") %>
+      </dd>
+    </div>
+
+    <!-- Cash Balance -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <dt class="text-sm font-medium text-gray-500">Cash Balance</dt>
+      <dd class="mt-2 text-3xl font-bold text-gray-900">
+        <%= number_to_currency(@portfolio.cash_balance, unit: "KES ") %>
+      </dd>
+    </div>
+
+    <!-- Unrealized P&L -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <dt class="text-sm font-medium text-gray-500">Unrealized P&L</dt>
+      <% unrealized = @portfolio.unrealized_pnl %>
+      <dd class="mt-2 text-3xl font-bold <%= unrealized >= 0 ? 'text-green-600' : 'text-red-600' %>">
+        <%= unrealized >= 0 ? '+' : '' %><%= number_to_currency(unrealized, unit: "KES ") %>
+      </dd>
+      <% if @portfolio.total_cost > 0 %>
+        <p class="mt-1 text-sm <%= unrealized >= 0 ? 'text-green-600' : 'text-red-600' %>">
+          <%= number_to_percentage(@portfolio.unrealized_pnl_percentage, precision: 2) %>
+        </p>
+      <% end %>
+    </div>
+
+    <!-- Realized P&L -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <dt class="text-sm font-medium text-gray-500">Realized P&L</dt>
+      <% realized = @portfolio.realized_pl %>
+      <dd class="mt-2 text-3xl font-bold <%= realized >= 0 ? 'text-green-600' : 'text-red-600' %>">
+        <%= realized >= 0 ? '+' : '' %><%= number_to_currency(realized, unit: "KES ") %>
+      </dd>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main content - Positions -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Positions table -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 class="text-lg font-semibold text-gray-900">Positions</h2>
+          <span class="text-sm text-gray-500"><%= pluralize(@portfolio.positions.count, 'position') %></span>
+        </div>
+        
+        <% if @portfolio.positions.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Security</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Quantity</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Avg Cost</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Current Price</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Market Value</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">P&L</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <% @portfolio.positions.includes(:security).each do |position| %>
+                  <% latest_quote = position.security.latest_quote %>
+                  <% current_price = latest_quote&.last_price || position.average_cost %>
+                  <% market_value = position.quantity * current_price %>
+                  <% cost_basis = position.quantity * position.average_cost %>
+                  <% pnl = market_value - cost_basis %>
+                  <% pnl_percent = (pnl / cost_basis * 100) if cost_basis > 0 %>
+                  
+                  <tr class="hover:bg-gray-50">
+                    <td class="whitespace-nowrap px-6 py-4">
+                      <%= link_to security_path(position.security), class: "block" do %>
+                        <div class="text-sm font-medium text-blue-600 hover:text-blue-900"><%= position.security.ticker %></div>
+                        <div class="text-xs text-gray-500"><%= position.security.name %></div>
+                      <% end %>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                      <%= number_with_delimiter(position.quantity) %>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                      <%= number_to_currency(position.average_cost, unit: "KES ") %>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                      <%= number_to_currency(current_price, unit: "KES ") %>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                      <%= number_to_currency(market_value, unit: "KES ") %>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right">
+                      <div class="text-sm font-semibold <%= pnl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                        <%= pnl >= 0 ? '+' : '' %><%= number_to_currency(pnl, unit: "KES ") %>
+                      </div>
+                      <% if pnl_percent %>
+                        <div class="text-xs <%= pnl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                          <%= number_to_percentage(pnl_percent, precision: 2) %>
+                        </div>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+              <tfoot class="bg-gray-50">
+                <tr>
+                  <td colspan="4" class="px-6 py-4 text-right text-sm font-medium text-gray-900">Total:</td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900">
+                    <%= number_to_currency(@portfolio.total_value, unit: "KES ") %>
+                  </td>
+                  <td class="whitespace-nowrap px-6 py-4 text-right">
+                    <div class="text-sm font-bold <%= @portfolio.unrealized_pnl >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                      <%= @portfolio.unrealized_pnl >= 0 ? '+' : '' %><%= number_to_currency(@portfolio.unrealized_pnl, unit: "KES ") %>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        <% else %>
+          <div class="px-6 py-12 text-center">
+            <p class="text-sm text-gray-500">No positions yet. Start trading to build your portfolio.</p>
+            <% if current_user.can_trade? %>
+              <%= link_to "Place Order", new_order_path(portfolio_id: @portfolio.id), class: "mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Allocation chart -->
+      <% if @portfolio.positions.any? %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Allocation</h2>
+          </div>
+          
+          <div class="px-6 py-4">
+            <div class="space-y-3">
+              <% total_value = @portfolio.total_value %>
+              <% @portfolio.positions.includes(:security).each do |position| %>
+                <% latest_quote = position.security.latest_quote %>
+                <% current_price = latest_quote&.last_price || position.average_cost %>
+                <% market_value = position.quantity * current_price %>
+                <% allocation = (market_value / total_value * 100) if total_value > 0 %>
+                
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium text-gray-700"><%= position.security.ticker %></span>
+                    <span class="text-gray-500"><%= number_to_percentage(allocation, precision: 1) %></span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: <%= allocation %>%"></div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Quick actions -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+        </div>
+        
+        <div class="px-6 py-4 space-y-2">
+          <% if current_user.can_trade? %>
+            <%= link_to "Place Order", new_order_path(portfolio_id: @portfolio.id), class: "block w-full text-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+          <% end %>
+          
+          <%= link_to "View Orders", orders_path(portfolio_id: @portfolio.id), class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+          
+          <%= link_to "Back to Portfolios", portfolios_path, class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+        </div>
+      </div>
+
+      <!-- Portfolio stats -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Statistics</h2>
+        </div>
+        
+        <div class="px-6 py-4">
+          <dl class="space-y-3">
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Total Cost</dt>
+              <dd class="text-sm font-medium text-gray-900">
+                <%= number_to_currency(@portfolio.total_cost, unit: "KES ") %>
+              </dd>
+            </div>
+            
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Holdings</dt>
+              <dd class="text-sm font-medium text-gray-900">
+                <%= @portfolio.positions.count %> securities
+              </dd>
+            </div>
+            
+            <% if @portfolio.total_cost > 0 %>
+              <div class="flex justify-between">
+                <dt class="text-sm text-gray-500">Return</dt>
+                <dd class="text-sm font-medium <%= @portfolio.unrealized_pnl_percentage >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                  <%= number_to_percentage(@portfolio.unrealized_pnl_percentage, precision: 2) %>
+                </dd>
+              </div>
+            <% end %>
+            
+            <div class="flex justify-between pt-3 border-t border-gray-200">
+              <dt class="text-sm text-gray-500">Created</dt>
+              <dd class="text-sm font-medium text-gray-900">
+                <%= @portfolio.created_at.strftime("%b %d, %Y") %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
