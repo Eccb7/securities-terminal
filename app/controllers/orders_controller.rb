@@ -32,10 +32,10 @@ class OrdersController < ApplicationController
     authorize @order
 
     if @order.save
-      # Submit order to matching engine (to be implemented)
-      # MatchingEngine.submit_order(@order)
+      # Submit order to matching engine
+      MatchingEngine.submit_order(@order)
 
-      redirect_to @order, notice: "Order created successfully"
+      redirect_to @order, notice: "Order created successfully and submitted to matching engine"
     else
       @securities = Security.active
       render :new, status: :unprocessable_entity
