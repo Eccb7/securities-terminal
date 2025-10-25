@@ -2,17 +2,25 @@ class MarketQuote < ApplicationRecord
   # Associations
   belongs_to :security
 
+  # Aliases for shorter column names
+  alias_attribute :bid_price, :bid
+  alias_attribute :ask_price, :ask
+  alias_attribute :open_price, :open
+  alias_attribute :high_price, :high
+  alias_attribute :low_price, :low
+  alias_attribute :close_price, :close
+
   # Validations
   validates :security, presence: true
   validates :timestamp, presence: true
   validates :last_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :bid_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :ask_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :bid, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :ask, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :volume, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :open_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :high_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :low_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :close_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :open, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :high, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :low, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :close, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   # Scopes
   scope :latest, -> { order(timestamp: :desc).limit(1) }
