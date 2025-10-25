@@ -1,0 +1,165 @@
+<div class="max-w-3xl mx-auto">
+  <nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <%= link_to "Alerts", alert_rules_path, class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li>
+        <%= link_to "Alert ##{@alert_rule.id}", alert_rule_path(@alert_rule), class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li class="text-gray-900 font-medium">
+        Edit
+      </li>
+    </ol>
+  </nav>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">Edit Alert</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        Update your alert for <strong><%= @alert_rule.security.ticker %></strong> 
+        (Created <%= time_ago_in_words(@alert_rule.created_at) %> ago)
+      </p>
+    </div>
+
+    <div class="px-6 py-6">
+      <%= form_with model: @alert_rule, local: true, class: "space-y-6" do |f| %>
+        <% if @alert_rule.errors.any? %>
+          <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">
+                  <%= pluralize(@alert_rule.errors.count, "error") %> prohibited this alert from being updated:
+                </h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <ul class="list-disc list-inside space-y-1">
+                    <% @alert_rule.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.label :security_id, "Security", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.collection_select :security_id, 
+              Security.active.order(:ticker), 
+              :id, 
+              :display_name, 
+              {},
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">Choose the security you want to monitor</p>
+        </div>
+
+        <div>
+          <%= f.label :condition_type, "Alert Condition", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :condition_type, 
+              [["Price", "price"], ["Volume", "volume"], ["Percent Change", "percent_change"]], 
+              {},
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">What metric do you want to monitor?</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :comparison_operator, "Operator", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :comparison_operator, 
+                [["Greater Than (>)", "greater_than"], ["Less Than (<)", "less_than"], ["Equals (=)", "equals"]], 
+                {},
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div>
+            <%= f.label :threshold_value, "Target Value", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.number_field :threshold_value, 
+                step: "0.01", 
+                placeholder: "0.00",
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :notification_method, "Notification Method", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :notification_method, 
+              [["Email", "email"], ["In-App", "in_app"], ["Both", "both"]], 
+              {},
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">How do you want to be notified when the alert triggers?</p>
+        </div>
+
+        <div>
+          <%= f.label :status, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <div class="flex items-center">
+            <%= f.check_box :status, { class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4" }, "active", "inactive" %>
+            <%= f.label :status, "Active", class: "ml-2 text-sm text-gray-700" %>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Inactive alerts will not trigger notifications</p>
+        </div>
+
+        <!-- Alert statistics -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <h3 class="text-sm font-medium text-gray-900 mb-3">Alert Statistics</h3>
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-gray-900"><%= @alert_rule.alert_events.count %></div>
+              <div class="text-xs text-gray-500">Total Triggers</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-gray-900"><%= @alert_rule.alert_events.pending.count %></div>
+              <div class="text-xs text-gray-500">Pending</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-gray-900"><%= @alert_rule.alert_events.resolved.count %></div>
+              <div class="text-xs text-gray-500">Resolved</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 pt-6 flex gap-3">
+          <%= f.submit "Update Alert", class: "inline-flex justify-center rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          <%= link_to "Cancel", alert_rule_path(@alert_rule), class: "inline-flex justify-center rounded-md bg-gray-100 px-6 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200" %>
+          <%= link_to "View Details", alert_rule_path(@alert_rule), class: "inline-flex justify-center rounded-md border border-gray-300 px-6 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Current market data -->
+  <% latest_quote = @alert_rule.security.latest_quote %>
+  <% if latest_quote %>
+    <div class="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+      <h3 class="text-sm font-medium text-gray-900 mb-3">Current Market Data</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <div class="text-xs text-gray-500">Last Price</div>
+          <div class="text-lg font-bold text-gray-900"><%= number_to_currency(latest_quote.last_price, unit: "KES ") %></div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">Your Target</div>
+          <div class="text-lg font-bold text-gray-900"><%= number_to_currency(@alert_rule.threshold_value, unit: "KES ") %></div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">Difference</div>
+          <% diff = latest_quote.last_price - @alert_rule.threshold_value %>
+          <div class="text-lg font-bold <%= diff >= 0 ? 'text-green-600' : 'text-red-600' %>">
+            <%= diff >= 0 ? '+' : '' %><%= number_to_currency(diff, unit: "KES ") %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
