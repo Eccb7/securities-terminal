@@ -42,7 +42,7 @@ Rails.application.routes.draw do
   resources :watchlists do
     member do
       post :add_security
-      delete :remove_security
+      delete "remove_security/:item_id", to: "watchlists#remove_security", as: :remove_security
     end
   end
 
