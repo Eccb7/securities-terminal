@@ -4,19 +4,19 @@ class Order < ApplicationRecord
   belongs_to :security
 
   # Enums
-  enum side: {
+  enum :side, {
     buy: 0,
     sell: 1
   }
 
-  enum order_type: {
+  enum :order_type, {
     market: 0,
     limit: 1,
     stop: 2,
     stop_limit: 3
-  }
+  }, prefix: :type
 
-  enum status: {
+  enum :status, {
     pending: 0,
     open: 1,
     partially_filled: 2,
@@ -26,7 +26,7 @@ class Order < ApplicationRecord
     expired: 6
   }
 
-  enum time_in_force: {
+  enum :time_in_force, {
     day: 0,
     gtc: 1,      # Good Till Cancelled
     ioc: 2,      # Immediate or Cancel
@@ -39,8 +39,8 @@ class Order < ApplicationRecord
   validates :side, presence: true
   validates :order_type, presence: true
   validates :quantity, numericality: { only_integer: true, greater_than: 0 }
-  validates :price, numericality: { greater_than: 0 }, if: -> { limit? || stop_limit? }
-  validates :stop_price, numericality: { greater_than: 0 }, if: -> { stop? || stop_limit? }
+  validates :price, numericality: { greater_than: 0 }, if: -> { type_limit? || type_stop_limit? }
+  validates :stop_price, numericality: { greater_than: 0 }, if: -> { type_stop? || type_stop_limit? }
   validates :status, presence: true
   validates :time_in_force, presence: true
   validate :validate_lot_size
