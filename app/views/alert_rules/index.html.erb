@@ -1,0 +1,117 @@
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold leading-6 text-gray-900">Price Alerts</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Get notified when securities hit your target prices
+        </p>
+      </div>
+      
+      <%= link_to "New Alert", new_alert_rule_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-4">
+    <%= form_with url: alert_rules_path, method: :get, class: "flex gap-2" do |f| %>
+      <%= f.select :status,
+                  options_for_select([["All", ""], ["Active", "active"], ["Inactive", "inactive"], ["Triggered", "triggered"]], params[:status]),
+                  {},
+                  class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      
+      <%= f.submit "Filter", class: "inline-flex items-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500" %>
+      
+      <% if params[:status].present? %>
+        <%= link_to "Clear", alert_rules_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Alerts table -->
+  <div class="overflow-hidden rounded-lg bg-white shadow">
+    <% if @alert_rules.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Security</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Condition</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Target</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Current</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Notification</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Created</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          <% @alert_rules.each do |alert_rule| %>
+            <tr class="hover:bg-gray-50">
+              <td class="whitespace-nowrap px-6 py-4">
+                <%= link_to security_path(alert_rule.security), class: "block" do %>
+                  <div class="text-sm font-medium text-blue-600 hover:text-blue-900"><%= alert_rule.security.ticker %></div>
+                  <div class="text-xs text-gray-500"><%= alert_rule.security.name %></div>
+                <% end %>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <%= alert_rule.condition_type.titleize %>
+                <%= alert_rule.comparison_operator %>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                <%= number_to_currency(alert_rule.threshold_value, unit: "KES ") %>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                <% latest_quote = alert_rule.security.latest_quote %>
+                <% if latest_quote %>
+                  <%= number_to_currency(latest_quote.last_price, unit: "KES ") %>
+                <% else %>
+                  <span class="text-gray-400">N/A</span>
+                <% end %>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4">
+                <%
+                  status_colors = {
+                    "active" => "bg-green-100 text-green-800",
+                    "inactive" => "bg-gray-100 text-gray-800",
+                    "triggered" => "bg-yellow-100 text-yellow-800"
+                  }
+                %>
+                <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold <%= status_colors[alert_rule.status] %>">
+                  <%= alert_rule.status.titleize %>
+                </span>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <%= alert_rule.notification_method.titleize %>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <%= time_ago_in_words(alert_rule.created_at) %> ago
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                <%= link_to "View", alert_rule_path(alert_rule), class: "text-blue-600 hover:text-blue-900 mr-3" %>
+                <%= link_to "Edit", edit_alert_rule_path(alert_rule), class: "text-gray-600 hover:text-gray-900 mr-3" %>
+                <%= button_to "Delete", alert_rule_path(alert_rule), method: :delete, class: "inline text-red-600 hover:text-red-900", form: { data: { turbo_confirm: "Are you sure you want to delete this alert?" } } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      
+      <!-- Pagination -->
+      <div class="flex justify-center py-4">
+        <%= paginate @alert_rules %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <h3 class="mt-2 text-sm font-semibold text-gray-900">No alerts</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a price alert.</p>
+        <div class="mt-6">
+          <%= link_to "Create Alert", new_alert_rule_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
