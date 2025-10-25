@@ -1,0 +1,109 @@
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="border-b border-gray-200 pb-5">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold leading-6 text-gray-900">Watchlists</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Track securities you're interested in and monitor their performance
+        </p>
+      </div>
+      
+      <%= link_to "New Watchlist", new_watchlist_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+    </div>
+  </div>
+
+  <!-- Watchlists grid -->
+  <% if @watchlists.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @watchlists.each do |watchlist| %>
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+          <!-- Watchlist header -->
+          <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <h3 class="text-lg font-semibold text-gray-900"><%= watchlist.name %></h3>
+            <p class="text-sm text-gray-500 mt-1">
+              <%= pluralize(watchlist.watchlist_items.count, 'security') %>
+            </p>
+          </div>
+
+          <!-- Watchlist items preview -->
+          <div class="px-6 py-4">
+            <% if watchlist.watchlist_items.any? %>
+              <div class="space-y-3">
+                <% watchlist.watchlist_items.includes(security: :market_quotes).limit(5).each do |item| %>
+                  <% security = item.security %>
+                  <% latest_quote = security.latest_quote %>
+                  
+                  <div class="flex justify-between items-center text-sm">
+                    <div>
+                      <div class="font-medium text-gray-900"><%= security.ticker %></div>
+                      <div class="text-xs text-gray-500 truncate max-w-[150px]"><%= security.name %></div>
+                    </div>
+                    
+                    <% if latest_quote %>
+                      <div class="text-right">
+                        <div class="font-semibold text-gray-900">
+                          <%= number_to_currency(latest_quote.last_price, unit: "KES ", precision: 2) %>
+                        </div>
+                        <% change_percent = latest_quote.price_change_percentage %>
+                        <div class="text-xs <%= change_percent >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                          <%= change_percent >= 0 ? '▲' : '▼' %> <%= number_to_percentage(change_percent.abs, precision: 2) %>
+                        </div>
+                      </div>
+                    <% else %>
+                      <div class="text-xs text-gray-400">No data</div>
+                    <% end %>
+                  </div>
+                <% end %>
+                
+                <% if watchlist.watchlist_items.count > 5 %>
+                  <div class="text-xs text-gray-500 text-center pt-2 border-t">
+                    + <%= watchlist.watchlist_items.count - 5 %> more
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-500 text-center py-4">No securities added yet</p>
+            <% end %>
+          </div>
+
+          <!-- Actions -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-2">
+            <%= link_to "View", watchlist_path(watchlist), class: "flex-1 text-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+            <%= link_to "Edit", edit_watchlist_path(watchlist), class: "rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Empty state -->
+    <div class="text-center py-12 bg-white rounded-lg shadow">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-semibold text-gray-900">No watchlists</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by creating a watchlist to track securities.</p>
+      <div class="mt-6">
+        <%= link_to "Create Watchlist", new_watchlist_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Info section -->
+  <div class="bg-blue-50 rounded-lg p-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-blue-800">About Watchlists</h3>
+        <div class="mt-2 text-sm text-blue-700">
+          <p>Watchlists help you monitor securities without owning them. Track price movements, set alerts, and make informed trading decisions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
