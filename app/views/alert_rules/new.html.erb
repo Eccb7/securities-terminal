@@ -1,0 +1,121 @@
+<div class="max-w-3xl mx-auto">
+  <nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <%= link_to "Alerts", alert_rules_path, class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li class="text-gray-900 font-medium">
+        New Alert
+      </li>
+    </ol>
+  </nav>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">Create New Alert</h1>
+      <p class="mt-1 text-sm text-gray-500">Set up a price alert to be notified when a security meets your conditions</p>
+    </div>
+
+    <div class="px-6 py-6">
+      <%= form_with model: @alert_rule, local: true, class: "space-y-6" do |f| %>
+        <% if @alert_rule.errors.any? %>
+          <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">
+                  <%= pluralize(@alert_rule.errors.count, "error") %> prohibited this alert from being saved:
+                </h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <ul class="list-disc list-inside space-y-1">
+                    <% @alert_rule.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.label :security_id, "Security", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.collection_select :security_id, 
+              Security.active.order(:ticker), 
+              :id, 
+              :display_name, 
+              { prompt: "Select a security..." },
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">Choose the security you want to monitor</p>
+        </div>
+
+        <div>
+          <%= f.label :condition_type, "Alert Condition", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :condition_type, 
+              [["Price", "price"], ["Volume", "volume"], ["Percent Change", "percent_change"]], 
+              { prompt: "Select condition type..." },
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">What metric do you want to monitor?</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :comparison_operator, "Operator", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :comparison_operator, 
+                [["Greater Than (>)", "greater_than"], ["Less Than (<)", "less_than"], ["Equals (=)", "equals"]], 
+                { prompt: "Select operator..." },
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div>
+            <%= f.label :threshold_value, "Target Value", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.number_field :threshold_value, 
+                step: "0.01", 
+                placeholder: "0.00",
+                class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :notification_method, "Notification Method", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :notification_method, 
+              [["Email", "email"], ["In-App", "in_app"], ["Both", "both"]], 
+              {},
+              class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          <p class="mt-1 text-xs text-gray-500">How do you want to be notified when the alert triggers?</p>
+        </div>
+
+        <div>
+          <%= f.label :status, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <div class="flex items-center">
+            <%= f.check_box :status, { class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4" }, "active", "inactive" %>
+            <%= f.label :status, "Active", class: "ml-2 text-sm text-gray-700" %>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Inactive alerts will not trigger notifications</p>
+        </div>
+
+        <div class="border-t border-gray-200 pt-6 flex gap-3">
+          <%= f.submit "Create Alert", class: "inline-flex justify-center rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          <%= link_to "Cancel", alert_rules_path, class: "inline-flex justify-center rounded-md bg-gray-100 px-6 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Helper info -->
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h3 class="text-sm font-medium text-blue-900 mb-2">💡 Alert Examples</h3>
+    <ul class="text-xs text-blue-800 space-y-1">
+      <li><strong>Price Alert:</strong> Notify me when EQTY > KES 50.00</li>
+      <li><strong>Volume Alert:</strong> Notify me when KCB volume > 1,000,000 shares</li>
+      <li><strong>Change Alert:</strong> Notify me when SCOM percent_change > 5%</li>
+    </ul>
+  </div>
+</div>
