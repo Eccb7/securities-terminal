@@ -4,7 +4,7 @@ class AlertRule < ApplicationRecord
   has_many :alert_events, dependent: :destroy
 
   # Enums
-  enum rule_type: {
+  enum :rule_type, {
     price_threshold: 0,
     price_change: 1,
     volume_threshold: 2,
@@ -12,7 +12,7 @@ class AlertRule < ApplicationRecord
     custom: 4
   }
 
-  enum severity: {
+  enum :severity, {
     info: 0,
     warning: 1,
     critical: 2
