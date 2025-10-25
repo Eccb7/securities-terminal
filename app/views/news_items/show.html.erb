@@ -1,0 +1,199 @@
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+  <nav class="flex" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <%= link_to "News", news_items_path, class: "text-gray-500 hover:text-gray-700" %>
+      </li>
+      <li>
+        <span class="text-gray-400">/</span>
+      </li>
+      <li class="text-gray-900 font-medium truncate max-w-md">
+        <%= truncate(@news_item.title, length: 50) %>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Main content -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Article -->
+    <article class="lg:col-span-2">
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200">
+          <!-- Category and Security badges -->
+          <div class="mb-4">
+            <%
+              category_colors = {
+                "earnings" => "bg-green-100 text-green-800",
+                "dividend" => "bg-blue-100 text-blue-800",
+                "corporate_action" => "bg-purple-100 text-purple-800",
+                "market_update" => "bg-yellow-100 text-yellow-800",
+                "regulatory" => "bg-red-100 text-red-800",
+                "other" => "bg-gray-100 text-gray-800"
+              }
+            %>
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium <%= category_colors[@news_item.category] || 'bg-gray-100 text-gray-800' %>">
+              <%= @news_item.category.titleize %>
+            </span>
+            
+            <% if @news_item.security %>
+              <%= link_to security_path(@news_item.security), class: "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800 hover:bg-indigo-200" do %>
+                <%= @news_item.security.ticker %> - <%= @news_item.security.name %>
+              <% end %>
+            <% end %>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            <%= @news_item.title %>
+          </h1>
+
+          <!-- Meta information -->
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+            <span class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <%= @news_item.published_at.strftime("%B %d, %Y at %I:%M %p") %>
+            </span>
+            
+            <% if @news_item.source %>
+              <span class="flex items-center">
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+                <strong>Source:</strong>&nbsp;<%= @news_item.source %>
+              </span>
+            <% end %>
+            
+            <% if @news_item.url %>
+              <%= link_to @news_item.url, target: "_blank", rel: "noopener noreferrer", class: "flex items-center text-blue-600 hover:text-blue-800" do %>
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Original Article
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <% if @news_item.summary.present? %>
+          <div class="p-6 bg-blue-50 border-b border-gray-200">
+            <p class="text-lg text-gray-700 italic">
+              <%= @news_item.summary %>
+            </p>
+          </div>
+        <% end %>
+
+        <!-- Content -->
+        <div class="p-6">
+          <div class="prose max-w-none">
+            <%= simple_format(@news_item.content) %>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 bg-gray-50 border-t border-gray-200">
+          <div class="flex justify-between items-center">
+            <%= link_to "← Back to News", news_items_path, class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            
+            <% if @news_item.security %>
+              <%= link_to "View #{@news_item.security.ticker} Details →", security_path(@news_item.security), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+      <!-- Security info (if applicable) -->
+      <% if @news_item.security %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Related Security</h2>
+          </div>
+          
+          <div class="px-6 py-4">
+            <div class="space-y-3">
+              <div>
+                <div class="text-sm font-medium text-gray-500">Security</div>
+                <div class="mt-1 text-lg font-bold text-gray-900">
+                  <%= @news_item.security.ticker %>
+                </div>
+                <div class="text-sm text-gray-500">
+                  <%= @news_item.security.name %>
+                </div>
+              </div>
+              
+              <% latest_quote = @news_item.security.latest_quote %>
+              <% if latest_quote %>
+                <div class="pt-3 border-t border-gray-200">
+                  <div class="text-sm font-medium text-gray-500">Last Price</div>
+                  <div class="mt-1 text-2xl font-bold text-gray-900">
+                    <%= number_to_currency(latest_quote.last_price, unit: "KES ") %>
+                  </div>
+                  <% change_percent = latest_quote.price_change_percentage %>
+                  <div class="text-sm <%= change_percent >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= change_percent >= 0 ? '▲' : '▼' %> <%= number_to_percentage(change_percent.abs, precision: 2) %>
+                  </div>
+                </div>
+              <% end %>
+              
+              <div class="pt-3 border-t border-gray-200">
+                <%= link_to "View Details", security_path(@news_item.security), class: "block w-full text-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+                
+                <% if user_signed_in? && current_user.can_trade? %>
+                  <%= link_to "Trade", new_order_path(security_id: @news_item.security.id), class: "block w-full text-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 mt-2" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Related news -->
+      <% if @related_news.any? %>
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Related News</h2>
+          </div>
+          
+          <div class="divide-y divide-gray-200">
+            <% @related_news.each do |news| %>
+              <div class="px-6 py-4 hover:bg-gray-50">
+                <%= link_to news_item_path(news), class: "block" do %>
+                  <h3 class="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                    <%= news.title %>
+                  </h3>
+                  <p class="text-xs text-gray-500">
+                    <%= news.published_at.strftime("%b %d, %Y") %>
+                  </p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Share/Actions -->
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Actions</h2>
+        </div>
+        
+        <div class="px-6 py-4 space-y-2">
+          <%= link_to "Browse All News", news_items_path, class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+          
+          <% if @news_item.security %>
+            <%= link_to "#{@news_item.security.ticker} News", news_items_path(security_id: @news_item.security.id), class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+          <% end %>
+          
+          <%= link_to "#{@news_item.category.titleize} News", news_items_path(category: @news_item.category), class: "block w-full text-center rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-200" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
