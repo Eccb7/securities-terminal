@@ -6,6 +6,10 @@ class User < ApplicationRecord
 
   # Associations
   belongs_to :organization, optional: true
+  has_many :portfolios, dependent: :destroy
+  has_many :orders, dependent: :destroy
+  has_many :watchlists, dependent: :destroy
+  has_many :audit_logs, foreign_key: :actor_id, dependent: :nullify
 
   # Enums
   enum :role, {
