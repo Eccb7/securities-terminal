@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_25_211948) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_25_214630) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,15 +27,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_25_211948) do
   end
 
   create_table "alert_rules", force: :cascade do |t|
-    t.string "name"
-    t.string "rule_type"
-    t.string "severity"
-    t.jsonb "expression"
-    t.boolean "enabled"
-    t.bigint "organization_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["organization_id"], name: "index_alert_rules_on_organization_id"
+    t.bigint "user_id", null: false
+    t.bigint "security_id", null: false
+    t.string "condition_type", null: false
+    t.string "comparison_operator", null: false
+    t.decimal "threshold_value", precision: 15, scale: 2, null: false
+    t.string "notification_method", default: "email"
+    t.string "status", default: "active"
+    t.index ["security_id", "status"], name: "index_alert_rules_on_security_id_and_status"
+    t.index ["security_id"], name: "index_alert_rules_on_security_id"
+    t.index ["user_id", "status"], name: "index_alert_rules_on_user_id_and_status"
+    t.index ["user_id"], name: "index_alert_rules_on_user_id"
   end
 
   create_table "audit_logs", force: :cascade do |t|
@@ -203,7 +207,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_25_211948) do
   end
 
   add_foreign_key "alert_events", "alert_rules"
-  add_foreign_key "alert_rules", "organizations"
+  add_foreign_key "alert_rules", "securities"
+  add_foreign_key "alert_rules", "users"
   add_foreign_key "audit_logs", "users", column: "actor_id"
   add_foreign_key "market_quotes", "securities"
   add_foreign_key "news_items", "securities"
