@@ -50,6 +50,9 @@ namespace :market_data do
         MatchingEngine.match_orders(security)
       end
 
+      # Check alert rules after market data update
+      AlertChecker.check_all_active_alerts
+
       sleep 5
     end
   rescue Interrupt

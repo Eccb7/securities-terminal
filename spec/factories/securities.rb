@@ -1,11 +1,28 @@
 FactoryBot.define do
   factory :security do
-    ticker { "MyString" }
-    name { "MyString" }
-    instrument_type { "MyString" }
-    currency { "MyString" }
-    isin { "MyString" }
+    sequence(:ticker) { |n| "TST#{n}" }
+    sequence(:name) { |n| "Test Security #{n}" }
+    instrument_type { 'equity' }
+    currency { 'KES' }
+    status { 'active' }
+    isin { Faker::Alphanumeric.alphanumeric(number: 12).upcase }
     lot_size { 1 }
-    status { "MyString" }
+    association :exchange
+
+    trait :bond do
+      instrument_type { 'bond' }
+    end
+
+    trait :etf do
+      instrument_type { 'etf' }
+    end
+
+    trait :suspended do
+      status { 'suspended' }
+    end
+
+    trait :delisted do
+      status { 'delisted' }
+    end
   end
 end
