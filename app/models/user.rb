@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :portfolios, dependent: :destroy
   has_many :orders, dependent: :destroy
   has_many :watchlists, dependent: :destroy
+  has_many :alert_rules, dependent: :destroy
   has_many :audit_logs, foreign_key: :actor_id, dependent: :nullify
 
   # Enums
@@ -19,7 +20,7 @@ class User < ApplicationRecord
     compliance_officer: 3,
     admin: 4,
     super_admin: 5
-  }, prefix: true
+  }
 
   # Validations
   validates :name, presence: true

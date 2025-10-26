@@ -5,8 +5,6 @@ class NewsItemsController < ApplicationController
   def index
     @news_items = NewsItem.includes(:security)
                           .order(published_at: :desc)
-                          .page(params[:page])
-                          .per(20)
 
     # Apply filters
     @news_items = @news_items.where(security_id: params[:security_id]) if params[:security_id].present?
@@ -16,6 +14,9 @@ class NewsItemsController < ApplicationController
     if params[:query].present?
       @news_items = @news_items.where("title LIKE ? OR content LIKE ?", "%#{params[:query]}%", "%#{params[:query]}%")
     end
+
+    # Paginate after all filters
+    @news_items = @news_items.page(params[:page]).per(20)
 
     @securities = Security.active.order(:ticker)
   end

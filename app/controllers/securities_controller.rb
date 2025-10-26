@@ -5,13 +5,14 @@ class SecuritiesController < ApplicationController
     @securities = policy_scope(Security)
                     .includes(:exchange, :market_quotes)
                     .active
-                    .page(params[:page])
-                    .per(25)
 
     # Apply filters
     @securities = @securities.by_instrument_type(params[:instrument_type]) if params[:instrument_type].present?
     @securities = @securities.by_exchange(params[:exchange_id]) if params[:exchange_id].present?
     @securities = @securities.search(params[:q]) if params[:q].present?
+
+    # Paginate after filters
+    @securities = @securities.page(params[:page]).per(25)
 
     @exchanges = Exchange.active
   end

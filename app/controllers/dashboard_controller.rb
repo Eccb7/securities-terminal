@@ -7,7 +7,7 @@ class DashboardController < ApplicationController
     @watchlists = current_user.watchlists.includes(:securities)
     @recent_orders = current_user.orders.recent.limit(10)
     @recent_news = NewsItem.recent.limit(5)
-    @alert_events = current_organization.alert_rules.flat_map(&:alert_events).select(&:unresolved?).sort_by(&:triggered_at).reverse.first(5)
+    @alert_events = current_user.alert_rules.includes(:alert_events).flat_map(&:alert_events).select(&:unresolved?).sort_by(&:triggered_at).reverse.first(5)
 
     # Market overview - top securities by volume
     @market_overview = Security.active

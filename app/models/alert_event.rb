@@ -27,6 +27,10 @@ class AlertEvent < ApplicationRecord
     status == "resolved"
   end
 
+  def unresolved?
+    status == "pending"
+  end
+
   def age
     return nil unless triggered_at
     Time.current - triggered_at

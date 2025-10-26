@@ -26,12 +26,13 @@ class Order < ApplicationRecord
     expired: 6
   }
 
-  enum :time_in_force, {
-    day: 0,
-    gtc: 1,      # Good Till Cancelled
-    ioc: 2,      # Immediate or Cancel
-    fok: 3       # Fill or Kill
-  }
+  # Note: time_in_force column doesn't exist yet - uncomment when migration is added
+  # enum :time_in_force, {
+  #   day: 0,
+  #   gtc: 1,      # Good Till Cancelled
+  #   ioc: 2,      # Immediate or Cancel
+  #   fok: 3       # Fill or Kill
+  # }
 
   # Validations
   validates :user, presence: true
@@ -42,7 +43,7 @@ class Order < ApplicationRecord
   validates :price, numericality: { greater_than: 0 }, if: -> { type_limit? || type_stop_limit? }
   validates :stop_price, numericality: { greater_than: 0 }, if: -> { type_stop? || type_stop_limit? }
   validates :status, presence: true
-  validates :time_in_force, presence: true
+  # validates :time_in_force, presence: true
   validate :validate_lot_size
   validate :validate_filled_quantity
 
@@ -132,7 +133,7 @@ class Order < ApplicationRecord
 
   def set_defaults
     self.status ||= :pending
-    self.time_in_force ||= :day
+    # self.time_in_force ||= :day  # Commented out until time_in_force column is added
     self.filled_quantity ||= 0
   end
 
