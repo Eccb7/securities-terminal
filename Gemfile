@@ -25,7 +25,7 @@ gem "pundit", "~> 2.3"
 gem "rotp", "~> 6.3" # For 2FA
 
 # Background jobs
-gem "sidekiq", "~> 7.2"
+gem "sidekiq", "~> 8.0"
 gem "redis", "~> 5.0"
 
 # API clients
